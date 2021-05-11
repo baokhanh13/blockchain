@@ -8,6 +8,12 @@ exports.createWallet = catchAsync(async (req, res, next) => {
     const wallet = new Wallet({ password });
     await wallet.save();
 
-    res.json({ msg: 'Create wallet succesfully', wallet });
+    res.json({ msg: 'Create wallet succesfully', privateKey: wallet.privateKey });
 });
 
+
+exports.login = catchAsync(async (req, res, next) => {
+    const { privateKey, password } = req.body;
+    const wallet = await Wallet.findByCredentials(privateKey, password);
+    res.json({ msg: 'Login successfully', publicKey: wallet.publicKey });
+});

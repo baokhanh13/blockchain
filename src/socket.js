@@ -6,9 +6,6 @@ let blockchain = new Blockchain();
 
 module.exports = function (io, socket) {
     console.log('New user connected');
-    socket.on('identity', ({ privateKey }) => {
-        socket.privateKey = privateKey;
-    });
 
     socket.on('disconnect', () => {
         console.log('disconnected...');
@@ -20,7 +17,7 @@ module.exports = function (io, socket) {
 
     socket.on('transfer', ({ fromAddress, toAddress, amount }) => {
         const tx = new Transaction(fromAddress, toAddress, amount);
-        tx.signTransaction(ec.keyFromPrivate(socket.privateKey));
+        tx.signTransaction(ec.keyFromPublic(fromAddress));
         blockchain.addTransaction(tx);
     });
 
