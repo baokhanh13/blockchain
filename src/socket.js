@@ -13,15 +13,31 @@ module.exports = function (io, socket) {
 
     socket.on('mine', (address) => {
         blockchain.minePendingTransactions(address);
+        socket.emit('balance', blockchain.getBalanceOfAddress(address));
     });
 
-    socket.on('transfer', ({ fromAddress, toAddress, amount }) => {
-        const tx = new Transaction(fromAddress, toAddress, amount);
-        tx.signTransaction(ec.keyFromPublic(fromAddress));
-        blockchain.addTransaction(tx);
+    socket.on('transfer', ({ privateKey, fromAddress, toAddress, amount }) => {
+        amount = parseInt(amount);
+        try {
+            const tx = new Transaction(fromAddress, toAddress, amount);
+            tx.signTransaction(ec.keyFromPrivate(privateKey));
+            blockchain.addTransaction(tx);
+            socket.emit('transfer-success');
+        } catch (e) {
+            console.log(e.stack);
+            if (e.message === 'Unknown point format') {
+                e.message = 'Wrong address';
+            }
+            socket.emit('transfer-fail', e.message);
+            console.log(e.message);
+        }
     });
 
     socket.on('get-balance', (address) => {
         socket.emit('balance', blockchain.getBalanceOfAddress(address));
+    });
+
+    socket.on('get-transactions', (address) => {
+        socket.emit('transactions', blockchain.getAllTransactionsForWallet(address));
     });
 }

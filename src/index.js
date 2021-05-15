@@ -3,6 +3,8 @@ const app = express();
 const mongoose = require('mongoose');
 const { handleError } = require('./middlewares/ErrorHandler');
 const router = require('./routes');
+const http = require('http');
+const socketIO = require('socket.io');
 
 require('dotenv').config();
 
@@ -27,5 +29,14 @@ app.use((err, req, res, next) => {
 	handleError(err, res);
 });
 
+const server = http.createServer(app);
+const io = socketIO(server, {
+	cors: {
+		origin: '*'
+	}
+});
 
-app.listen(port, () => console.log(`Server is listening on port ${port}`));
+io.on('connection', (socket) => require('./socket')(io, socket));
+
+
+server.listen(port, () => console.log(`Server is listening on port ${port}`));

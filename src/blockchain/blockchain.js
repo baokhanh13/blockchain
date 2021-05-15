@@ -38,18 +38,18 @@ class Blockchain {
 
 	addTransaction(transaction) {
 		if (!transaction.fromAddress || !transaction.toAddress) {
-			throw new ErrorHandler(400, 'Transaction must include address');
+			throw new Error('Transaction must include address');
 		}
 		if (!transaction.isValid()) {
-			throw new ErrorHandler(400, 'Transaction must be validated');
+			throw new Error('Transaction must be validated');
 		}
 		if (transaction.amount <= 0) {
-			throw new ErrorHandler(400, 'Amount must be higher than 0');
+			throw new Error('Amount must be higher than 0');
 		}
 		if (
 			this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
 		) {
-			throw new ErrorHandler(400, 'Amount must be smaller than balance');
+			throw new Error('Amount must be smaller than balance');
 		}
 		this.pendingTransactions.push(transaction);
 	}
@@ -71,25 +71,15 @@ class Blockchain {
 	}
 
 	getAllTransactionsForWallet(address) {
-		const txs = this.chain.map((block) =>
-			block.transactions.map((tx) => {
-				if (tx.fromAddress === address || tx.toAddress) return tx;
-			})
-        );
-        return txs;
-    }
-    
-    isChainValid() {
-        const realGenesis = JSON.stringify(this.createGenesisBlock());
-
-        if (realGenesis !== JSON.stringify(this.chain[0])) {
-            return false;
-        }
-
-        const validChain = this.chain.filter(block => !block.hasValidTransactions() || block.hash !== block.calculateHash());
-        console.log(validChain);
-        return validChain.length === 0;
-    }
+		const txs = [];
+		this.chain
+			.forEach((block) =>
+				block.transactions.forEach((tx) => {
+					if (tx.fromAddress === address || tx.toAddress === address) txs.push(tx);
+				})
+			);
+		return txs;
+	}
 }
 
 module.exports = Blockchain;
